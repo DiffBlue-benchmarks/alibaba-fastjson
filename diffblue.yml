@@ -1,0 +1,1448 @@
+buildCmd: mvn -e -X -Dmaven.enforcer.skip=true -Denforcer.skip=true -Dair.check.skip-all=true -Dmaven.test.skip=true compile
+testCmd: true
+skipVerification: true
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    # Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy
+      smart-harness: simplest-constructor-and-nondet
+  -
+    # Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    # Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    # PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/RyuFloat.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/RyuFloat.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils$1.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/JavaBeanDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/JavaBeanDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/ParseContext.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/ParseContext.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$ArrayAccessSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONField.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONField.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONType.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONType.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSON.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSON.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONScanner.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONScanner.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntBetweenSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ParameterizedTypeImpl.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ParameterizedTypeImpl.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RlikeSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONObject.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONObject.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMClassLoader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMClassLoader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$ValueSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$FilterGroup.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$DoubleOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MultiIndexSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ServiceLoader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ServiceLoader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONArray.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONArray.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IdentityHashMap$Entry.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IdentityHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONPOJOBuilder.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONPOJOBuilder.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/FieldInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/FieldInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPathException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPathException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MultiPropertySegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/TypeUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/TypeUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MatchSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$JSONPathParser.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/JavaBeanInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/JavaBeanInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IdentityHashMap.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IdentityHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntObjInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$NotNullSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$Segment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ExtraProcessor.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ExtraProcessor.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$FilterSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/PropertyNamingStrategy.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/PropertyNamingStrategy.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializerFeature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializerFeature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RangeSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$StringOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeBeanInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeBeanInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$NullSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$StringInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ASMSerializerFactory.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ASMSerializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ObjectDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ObjectDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/AutowiredObjectDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/AutowiredObjectDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/LongCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/LongCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Item.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Item.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ThrowableDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ThrowableDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ExtraTypeProvider.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ExtraTypeProvider.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/GenericArrayTypeImpl.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/GenericArrayTypeImpl.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/AwtCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/AwtCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ArraySerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ArraySerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/DefaultFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/DefaultFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory$Context.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeConfig.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeConfig.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/IntegerCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/IntegerCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Label.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Label.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ByteVector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ByteVector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeFilterable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeFilterable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/JavaBeanSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/JavaBeanSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassReader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassReader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/JSONSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/JSONSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodVisitor.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodVisitor.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/FieldSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/FieldSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/TypeCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/TypeCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/FieldWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/FieldWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Type.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Type.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ObjectSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ObjectSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/BeanContext.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/BeanContext.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/spi/Module.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/spi/Module.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/AutowiredObjectSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/AutowiredObjectSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/SymbolTable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/SymbolTable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONLexerBase.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONLexerBase.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/ParserConfig.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/ParserConfig.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONLexer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONLexer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/DefaultJSONParser$ResolveTask.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/DefaultJSONParser.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ASMSerializerFactory$Context.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ASMSerializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/CalendarCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/CalendarCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/Feature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/Feature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RefOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONToken.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONToken.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RegMatchSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/DefaultJSONParser.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/DefaultJSONParser.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/EnumDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/EnumDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/StringCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/StringCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ResolveFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ResolveFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$PropertySegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/MapDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/MapDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/FieldTypeResolver.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/FieldTypeResolver.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ArrayListTypeFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ArrayListTypeFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/FieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/FieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ExtraProcessable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ExtraProcessable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/PropertyProcessableDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/PropertyProcessableDeserializer.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$JSONPathParser.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$ArrayAccessSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONArray.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONArray.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$FilterGroup.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPathException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPathException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSON.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSON.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RegMatchSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RefOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MatchSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntBetweenSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/TypeUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/TypeUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MultiPropertySegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntObjInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RlikeSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$NotNullSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$Segment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$FilterSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$PropertySegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$Operator.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RangeSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$StringOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$ValueSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$DoubleOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$NullSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MultiIndexSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$StringInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$Filter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONScanner.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONScanner.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/SymbolTable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/SymbolTable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONLexerBase.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONLexerBase.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONToken.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONToken.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/TypeCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/TypeCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Type.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Type.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassReader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassReader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONField.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONField.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONLexerBase.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONLexerBase.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/SymbolTable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/SymbolTable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONScanner.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONScanner.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/Feature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/Feature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONToken.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONToken.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/ParserConfig.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/ParserConfig.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/JavaBeanDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/JavaBeanDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONField.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONField.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/AutowiredObjectDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/AutowiredObjectDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONType.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONType.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/spi/Module.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/spi/Module.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ThrowableDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ThrowableDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/AwtCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/AwtCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodVisitor.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodVisitor.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/JSONPDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/JSONPDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ParameterizedTypeImpl.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ParameterizedTypeImpl.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/Feature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/Feature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/DefaultFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/DefaultFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory$Context.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/FieldInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/FieldInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ByteVector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ByteVector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ObjectDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ObjectDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassReader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassReader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMClassLoader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMClassLoader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/TypeCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/TypeCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/FieldWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/FieldWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Type.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Type.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ServiceLoader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ServiceLoader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Item.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Item.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IdentityHashMap$Entry.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IdentityHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/CharArrayCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/CharArrayCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Label.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Label.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/SymbolTable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/SymbolTable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/TypeUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/TypeUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/JavaBeanInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/JavaBeanInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IdentityHashMap.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IdentityHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONPOJOBuilder.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONPOJOBuilder.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/EnumDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/EnumDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/PropertyNamingStrategy.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/PropertyNamingStrategy.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializerFeature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializerFeature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ArrayListTypeFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ArrayListTypeFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/FieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/FieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/PropertyProcessableDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/PropertyProcessableDeserializer.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$Entry.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$EntrySet.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$HashIterator.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$ValueIterator.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$EntryIterator.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$Values.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$KeySet.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/AntiCollisionHashMap$KeyIterator.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/AntiCollisionHashMap.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Type.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Type.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/TypeUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/TypeUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/ParseContext.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/ParseContext.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$ArrayAccessSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONField.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONField.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONType.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONType.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/annotation/JSONPOJOBuilder.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/annotation/JSONPOJOBuilder.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONScanner.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONScanner.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntBetweenSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ParameterizedTypeImpl.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ParameterizedTypeImpl.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RlikeSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IOUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IOUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONObject.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONObject.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Type.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Type.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/JavaBeanSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/JavaBeanSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMClassLoader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMClassLoader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IdentityHashMap$Entry.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IdentityHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$FilterGroup.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$DoubleOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MultiIndexSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ServiceLoader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ServiceLoader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/GenericArrayTypeImpl.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/GenericArrayTypeImpl.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$ValueSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSON.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSON.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/FieldInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/FieldInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/DefaultJSONParser.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/DefaultJSONParser.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPathException.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPathException.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MultiPropertySegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RefOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$MatchSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$JSONPathParser.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/JavaBeanInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/JavaBeanInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/IdentityHashMap.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/IdentityHashMap.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/ASMUtils.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/ASMUtils.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$IntObjInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$NotNullSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$Segment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/StringCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/StringCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$FilterSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/PropertyNamingStrategy.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/PropertyNamingStrategy.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ArraySerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ArraySerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RangeSegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$StringOpSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeBeanInfo.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeBeanInfo.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$NullSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/FieldSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/FieldSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$StringInSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/JavaBeanDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/JavaBeanDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ASMSerializerFactory.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ASMSerializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ObjectDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ObjectDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/AutowiredObjectDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/AutowiredObjectDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/LongCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/LongCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Item.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Item.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ThrowableDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ThrowableDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ExtraTypeProvider.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ExtraTypeProvider.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONArray.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONArray.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/AwtCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/AwtCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/JSONSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/JSONSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory$Context.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeConfig.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeConfig.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/IntegerCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/IntegerCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/Label.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/Label.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ByteVector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ByteVector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeFilterable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeFilterable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/ClassReader.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/ClassReader.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/DefaultFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/DefaultFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodVisitor.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodVisitor.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/TypeCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/TypeCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/FieldWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/FieldWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializerFeature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializerFeature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ObjectSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ObjectSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/BeanContext.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/BeanContext.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/spi/Module.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/spi/Module.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/AutowiredObjectSerializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/AutowiredObjectSerializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/SymbolTable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/SymbolTable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONLexerBase.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONLexerBase.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/ParserConfig.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/ParserConfig.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/asm/MethodCollector.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/asm/MethodCollector.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONLexer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONLexer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/DefaultJSONParser$ResolveTask.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/DefaultJSONParser.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/ASMSerializerFactory$Context.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/ASMSerializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/CalendarCodec.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/CalendarCodec.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/Feature.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/Feature.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/JSONToken.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/JSONToken.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$RegMatchSegement.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/serializer/SerializeWriter.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/serializer/SerializeWriter.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/EnumDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/EnumDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ExtraProcessor.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ExtraProcessor.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ResolveFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ResolveFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/JSONPath$PropertySegment.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/JSONPath.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/MapDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/MapDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/FieldTypeResolver.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/FieldTypeResolver.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ASMDeserializerFactory.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ArrayListTypeFieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ArrayListTypeFieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/FieldDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/FieldDeserializer.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/ExtraProcessable.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/ExtraProcessable.java
+   - dir: target/classes
+     file: com/alibaba/fastjson/parser/deserializer/PropertyProcessableDeserializer.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/parser/deserializer/PropertyProcessableDeserializer.java
+ - target:
+   - dir: target/classes
+     file: com/alibaba/fastjson/util/RyuDouble.class
+     sourceDir: src/main/java
+     sourceFile: com/alibaba/fastjson/util/RyuDouble.java
